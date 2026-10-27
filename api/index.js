@@ -5,8 +5,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', '*');
   if (req.method === 'OPTIONS') { return res.status(200).end(); }
 
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  // 🔴 PASTE YOUR KEYS HERE (Replace the strings below)
+  const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZGh2ZmV4eWpvY3hxbWtvYmRvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDk5MTUyMiwiZXhwIjoyMTA2NTY3NTIyfQ.7bs3iqyYKF_RN7mu3PunN9CtlEFedcKYP0qnEbh_vdw';
+
   const path = req.url.replace(/^\/api/, '');
   const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
 
