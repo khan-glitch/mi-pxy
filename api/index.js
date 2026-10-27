@@ -9,12 +9,12 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 🔴 REPLACE THIS WITH YOUR NEW MASTER INVENTORY SUPABASE URL
+  // 🔴 PASTE YOUR MASTER INVENTORY SUPABASE URL HERE
   const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
   
   const path = req.url.replace(/^\/api/, '') || '/';
 
-  // --- SPECIAL HANDLER FOR PHOTOS (Clinic code breaks on images) ---
+  // Handle Photo Upload (Binary)
   if (path === '/photo-upload' && req.method === 'POST') {
     try {
       const { base64, filename } = req.body || {};
@@ -34,9 +34,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: e.message }); 
     }
   }
-  // ------------------------------------------------------------------
 
-  // --- EXACT CLINIC APP DATABASE PASS-THROUGH ---
+  // Handle Database Sync
   const target = SUPABASE_URL + path;
 
   try {
