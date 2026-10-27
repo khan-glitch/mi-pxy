@@ -1,23 +1,27 @@
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
 export default async function handler(req, res) {
+  // 1. ALWAYS Set CORS Headers First
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 
+  // 2. Instantly approve the CORS preflight
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     return res.status(200).end();
   }
 
-  // 🔴 PASTE YOUR MASTER INVENTORY SUPABASE URL HERE
+  // 🔴 YOUR MASTER INVENTORY SUPABASE URL (No trailing slash)
   const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
   
   const path = req.url.replace(/^\/api/, '') || '/';
 
-  // Handle Photo Upload (Binary)
+  // --- PHOTO UPLOAD HANDLER ---
   if (path === '/photo-upload' && req.method === 'POST') {
     try {
       const { base64, filename } = req.body || {};
+      if (!base64 || !filename) return res.status(400).json({ error: 'Missing data' });
+
       const buffer = Buffer.from(base64.split(',')[1] || base64, 'base64');
       const up = await fetch(`${SUPABASE_URL}/storage/v1/object/mi_inventory/${filename}`, {
         method: 'POST', 
@@ -35,7 +39,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // Handle Database Sync
+  // --- DATABASE PASS-THROUGH ---
   const target = SUPABASE_URL + path;
 
   try {
@@ -56,6 +60,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
     res.status(response.status).send(Buffer.from(buffer));
   } catch (error) {
+    // Even if Supabase fails, we return 500 WITH CORS headers
     res.status(500).json({ error: error.message });
   }
 }
