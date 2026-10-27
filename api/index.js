@@ -3,17 +3,19 @@ export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') { return res.status(200).end(); }
+
 
   // 🔴 PASTE YOUR KEYS HERE (Replace the strings below)
   const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
   const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZGh2ZmV4eWpvY3hxbWtvYmRvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDk5MTUyMiwiZXhwIjoyMTA2NTY3NTIyfQ.7bs3iqyYKF_RN7mu3PunN9CtlEFedcKYP0qnEbh_vdw';
-
-  // Get the path (e.g., /rest/v1/mi_locations?updated_at=gt.123)
-  const path = req.url.replace(/^\/api/, '');
+ const url = new URL(req.url, 'http://localhost');
+  const path = url.pathname.replace(/^\/api/, ''); 
+  const search = url.search; 
 
   // 1. Photo Upload Endpoint
-  if (path.startsWith('/photo-upload') && req.method === 'POST') {
+  if (path === '/photo-upload' && req.method === 'POST') {
     const { base64, filename } = req.body || {};
     if (!base64 || !filename) return res.status(400).json({ error: 'Missing data' });
     try {
@@ -30,9 +32,9 @@ export default async function handler(req, res) {
 
   // 2. Database Sync Pass-through
   try {
-    // We simply append the path (which already includes the query string) to the Supabase URL
-    const targetUrl = `${SUPABASE_URL}${path}`;
-    
+    const targetUrl = `${SUPABASE_URL}${path}${search}`;
+    console.log("Proxying to:", targetUrl); // For Vercel logs
+
     const response = await fetch(targetUrl, {
       method: req.method,
       headers: { 
