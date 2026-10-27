@@ -1,9 +1,16 @@
 {
   "version": 2,
-  "rewrites": [
+  "headers": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/proxy"
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "*" }
+      ]
     }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }
