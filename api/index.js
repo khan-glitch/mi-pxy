@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 🔴 YOUR MASTER INVENTORY SUPABASE URL (No trailing slash)
+  // 🔴 YOUR SUPABASE URL
   const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
   
   const path = req.url.replace(/^\/api/, '') || '/';
@@ -56,10 +56,6 @@ export default async function handler(req, res) {
         : undefined
     });
     
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.status(200).json({ message: "Hello from Vercel Proxy!" });
-}
     const buffer = await response.arrayBuffer();
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
     res.status(response.status).send(Buffer.from(buffer));
