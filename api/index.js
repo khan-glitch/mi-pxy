@@ -3,7 +3,7 @@ export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 export default async function handler(req, res) {
   // 1. ALWAYS Set CORS Headers First
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'apikey, authorization, content-type, prefer');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 
   // 2. Instantly approve the CORS preflight
