@@ -55,7 +55,11 @@ export default async function handler(req, res) {
         ? JSON.stringify(req.body)
         : undefined
     });
-
+    
+export default function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.status(200).json({ message: "Hello from Vercel Proxy!" });
+}
     const buffer = await response.arrayBuffer();
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
     res.status(response.status).send(Buffer.from(buffer));
