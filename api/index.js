@@ -1,45 +1,20 @@
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
 export default async function handler(req, res) {
-  // 1. ALWAYS Set CORS Headers First
+  // 1. Set CORS headers FIRST so they apply even if fetch fails
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'apikey, authorization, content-type, prefer');
+  res.setHeader('Access-Control-Allow-Headers', 'apikey, authorization, content-type, prefer, x-client-info, accept-profile, content-profile');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 
-  // 2. Instantly approve the CORS preflight
+  // 2. Handle Preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // 🔴 YOUR SUPABASE URL
   const SUPABASE_URL = 'https://zbdhvfexyjocxqmkobdo.supabase.co';
   
+  // 3. Safely parse the path. Keep query params intact.
   const path = req.url.replace(/^\/api/, '') || '/';
-
-  // --- PHOTO UPLOAD HANDLER ---
-  if (path === '/photo-upload' && req.method === 'POST') {
-    try {
-      const { base64, filename } = req.body || {};
-      if (!base64 || !filename) return res.status(400).json({ error: 'Missing data' });
-
-      const buffer = Buffer.from(base64.split(',')[1] || base64, 'base64');
-      const up = await fetch(`${SUPABASE_URL}/storage/v1/object/mi_inventory/${filename}`, {
-        method: 'POST', 
-        headers: { 
-          apikey: req.headers['apikey'], 
-          Authorization: req.headers['authorization'], 
-          'x-upsert': 'true' 
-        }, 
-        body: buffer
-      });
-      if (!up.ok) return res.status(500).json({ error: await up.text() });
-      return res.status(200).json({ success: true });
-    } catch (e) { 
-      return res.status(500).json({ error: e.message }); 
-    }
-  }
-
-  // --- DATABASE PASS-THROUGH ---
   const target = SUPABASE_URL + path;
 
   try {
@@ -48,19 +23,31 @@ export default async function handler(req, res) {
       headers: {
         'apikey': req.headers['apikey'] || '',
         'Authorization': req.headers['authorization'] || '',
-        'Content-Type': 'application/json',
+        // Forward exact content-type, don't hardcode it
+        'Content-Type': req.headers['content-type'] || 'application/json',
+        // Forward Prefer exactly, don't default to ''
         'Prefer': req.headers['prefer'] || ''
       },
+      // Prevent JSON.stringify if body is already a string
       body: (req.method !== 'GET' && req.method !== 'HEAD' && req.body)
-        ? JSON.stringify(req.body)
+        ? (typeof req.body === 'string' ? req.body : JSON.stringify(req.body))
         : undefined
     });
     
     const buffer = await response.arrayBuffer();
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
-    res.status(response.status).send(Buffer.from(buffer));
+    res.status(response.status);
+    
+    // 4. THE CRITICAL FIX: Copy response headers EXCEPT encoding
+    response.headers.forEach((value, key) => {
+      const lk = key.toLowerCase();
+      if (lk !== 'content-encoding' && lk !== 'content-length' && lk !== 'transfer-encoding') {
+        res.setHeader(key, value);
+      }
+    });
+
+    res.send(Buffer.from(buffer));
   } catch (error) {
-    // Even if Supabase fails, we return 500 WITH CORS headers
+    console.error("Proxy Error:", error);
     res.status(500).json({ error: error.message });
   }
 }
